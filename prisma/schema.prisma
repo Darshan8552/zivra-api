@@ -11,3 +11,92 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  DELETED
+}
+
+enum OtpPurpose {
+  REGISTER
+  LOGIN
+  FORGOT_PASSWORD
+  CHANGE_EMAIL
+}
+
+enum DeviceType {
+  WEB
+  ANDROID
+  IOS
+  UNKNOWN
+}
+
+model User {
+  id              String     @id @default(uuid(7))
+  email           String     @unique
+  username        String     @unique
+  passwordHash    String     @map("password_hash")
+  name            String
+  bio             String?
+  avatarUrl       String?    @map("avatar_url")
+  role            Role       @default(USER)
+  status          UserStatus @default(ACTIVE) @map("status")
+  isPrivate       Boolean    @default(false) @map("is_private")
+  emailVerifiedAt DateTime?  @map("email_verified_at")
+  lastLoginAt     DateTime?  @map("last_login_at")
+  createdAt       DateTime   @default(now()) @map("created_at")
+  updatedAt       DateTime   @updatedAt @map("updated_at")
+  deletedAt       DateTime?  @map("deleted_at")
+  sessions        Session[]
+  otps            Otp[]
+
+  @@index([status])
+  @@index([deletedAt])
+  @@map("users")
+}
+
+model Session {
+  id               String     @id @default(uuid(7))
+  userId           String     @map("user_id")
+  user             User       @relation(fields: [userId], references: [id])
+  refreshTokenHash String     @unique @map("refresh_token_hash")
+  deviceId         String?    @map("device_id")
+  deviceName       String?    @map("device_name")
+  deviceType       DeviceType @default(UNKNOWN) @map("device_type")
+  userAgent        String?    @map("user_agent")
+  ipAddress        String?    @map("ip_address")
+  expiresAt        DateTime   @map("expires_at")
+  lastUsedAt       DateTime?  @map("last_used_at")
+  revokedAt        DateTime?  @map("revoked_at")
+  createdAt        DateTime   @default(now()) @map("created_at")
+  updatedAt        DateTime   @updatedAt @map("updated_at")
+
+  @@index([userId])
+  @@index([userId, revokedAt])
+  @@index([expiresAt])
+  @@map("sessions")
+}
+
+model Otp {
+  id           String     @id @default(uuid(7))
+  userId       String?    @map("user_id")
+  email        String
+  otpHash      String     @map("otp_hash")
+  purpose      OtpPurpose
+  attemptCount Int        @default(0) @map("attempt_count")
+  expiresAt    DateTime   @map("expires_at")
+  verifiedAt   DateTime?  @map("verified_at")
+  createdAt    DateTime   @default(now()) @map("created_at")
+  user         User?      @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([email, purpose, verifiedAt])
+  @@index([expiresAt])
+  @@map("otps")
+}
