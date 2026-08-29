@@ -19,6 +19,7 @@ import { CreatePostDto } from './dto/create-post.dto';
 import { SearchPostsDto } from './dto/search-posts.dto';
 import { memoryStorage } from 'multer';
 import { FilesInterceptor } from '@nestjs/platform-express';
+import { Throttle } from '@nestjs/throttler';
 
 const MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024; // 50MB per file
 const MAX_FILES = 10;
@@ -51,7 +52,7 @@ export class PostsController {
     return this.postsService.createPost(user.id, dto, files);
   }
 
-  // TODO Phase 2: add @UseGuards(ThrottlerGuard) + @Throttle({default:{limit:30, ttl:60000}}) for search enumeration (gap audit-api.md C2)
+  @Throttle({ search: { limit: 30, ttl: 60000 } })
   @Get('search')
   async search(
     @Query() dto: SearchPostsDto,

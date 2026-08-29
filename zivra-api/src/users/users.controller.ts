@@ -19,6 +19,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { RespondFollowDto } from './dto/respond-follow.dto';
+import { Throttle } from '@nestjs/throttler';
 
 const MAX_AVATAR_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
 const ALLOWED_AVATAR_TYPE_REGEX = /^image\/(jpeg|png|webp|heic|heif)$/;
@@ -26,6 +27,7 @@ const ALLOWED_AVATAR_TYPE_REGEX = /^image\/(jpeg|png|webp|heic|heif)$/;
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
+  @Throttle({ search: { limit: 30, ttl: 60000 } })
   @Get('search')
   async search(@Query() dto: SearchUsersDto, @CurrentUser() user: SafeUser) {
     return this.usersService.searchUsers(dto, user.id);
