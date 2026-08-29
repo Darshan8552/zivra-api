@@ -51,6 +51,7 @@ export class PostsController {
     return this.postsService.createPost(user.id, dto, files);
   }
 
+  // TODO Phase 2: add @UseGuards(ThrottlerGuard) + @Throttle({default:{limit:30, ttl:60000}}) for search enumeration (gap audit-api.md C2)
   @Get('search')
   async search(
     @Query() dto: SearchPostsDto,
