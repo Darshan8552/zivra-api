@@ -23,6 +23,7 @@ import { LikesModule } from './likes/likes.module';
 import { CommentsModule } from './comments/comments.module';
 import { BookmarksModule } from './bookmarks/bookmarks.module';
 import { FeedModule } from './feed/feed.module';
+import { HealthModule } from './health/health.module';
 
 @Module({
   imports: [
@@ -54,6 +55,7 @@ import { FeedModule } from './feed/feed.module';
     CommentsModule,
     BookmarksModule,
     FeedModule,
+    HealthModule,
   ],
   providers: [
     {
