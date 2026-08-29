@@ -208,9 +208,52 @@ export class PostsService {
 
   async searchPosts(dto: SearchPostsDto, viewerId: string) {
     const term = dto.q?.trim();
-    if (!term) return { items: [], nextCursor: null };
-
     const take = Math.min(dto.limit ?? 12, 50);
+
+    // Trending fallback when q is empty: recent public posts
+    if (!term) {
+      const trending = await this.prisma.post.findMany({
+        where: {
+          status: PostStatus.ACTIVE,
+          deletedAt: null,
+          user: { status: 'ACTIVE', deletedAt: null, isPrivate: false },
+        },
+        take: take + 1,
+        ...(dto.cursor ? { cursor: { id: dto.cursor }, skip: 1 } : {}),
+        orderBy: { createdAt: 'desc' },
+        include: POST_INCLUDE,
+      });
+      const hasMore = trending.length > take;
+      const items = hasMore ? trending.slice(0, take) : trending;
+      if (items.length === 0) return { items: [], nextCursor: null };
+      // Enrich liked/bookmarked
+      if (viewerId && items.length > 0) {
+        const postIds = items.map((p) => p.id);
+        const [likes, bookmarks] = await Promise.all([
+          this.prisma.postLike.findMany({
+            where: { userId: viewerId, postId: { in: postIds } },
+            select: { postId: true },
+          }),
+          this.prisma.bookmark.findMany({
+            where: { userId: viewerId, postId: { in: postIds } },
+            select: { postId: true },
+          }),
+        ]);
+        const likedSet = new Set(likes.map((l) => l.postId));
+        const bookmarkedSet = new Set(bookmarks.map((b) => b.postId));
+        const enriched = items.map((post) => ({
+          ...post,
+          liked: likedSet.has(post.id),
+          bookmarked: bookmarkedSet.has(post.id),
+        }));
+        return { items: enriched, nextCursor: hasMore ? enriched[enriched.length - 1].id : null };
+      }
+      return {
+        items: items.map((p) => ({ ...p, liked: false, bookmarked: false })),
+        nextCursor: hasMore ? items[items.length - 1].id : null,
+      };
+    }
+
     const normalizedTag = term.toLowerCase().replace(/^#+/, '').trim();
 
     const where: Record<string, unknown> = {

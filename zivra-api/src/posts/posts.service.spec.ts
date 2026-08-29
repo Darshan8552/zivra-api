@@ -45,10 +45,18 @@ describe('PostsService.searchPosts', () => {
     service = moduleRef.get(PostsService);
   });
 
-  test('returns empty for empty q', async () => {
+  test('returns trending for empty q', async () => {
+    mockPrisma.post.findMany.mockResolvedValue([
+      { id: 'p1', userId: 'u1', caption: 'hello', user: { id: 'u1', isPrivate: false } },
+    ]);
     const result = await service.searchPosts({ q: '   ' } as any, 'viewer');
-    expect(result).toEqual({ items: [], nextCursor: null });
-    expect(mockPrisma.post.findMany).not.toHaveBeenCalled();
+    expect(result.items.length).toBe(1);
+    expect(result.items[0].id).toBe('p1');
+    expect(mockPrisma.post.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ user: { status: 'ACTIVE', deletedAt: null, isPrivate: false } }),
+      }),
+    );
   });
 
   test('filters private author not followed', async () => {
