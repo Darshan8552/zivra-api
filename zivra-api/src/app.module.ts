@@ -7,9 +7,14 @@ import { UsersModule } from './users/users.module';
 import { GlobalLoggerMiddleware } from './common/middlewares/global-logger.middleware';
 import { PostsModule } from './posts/posts.module';
 import { MailModule } from './mail/mail.module';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { HttpExceptionFilter } from './common/filters/http-exception.filter';
+import {
+  PrismaExceptionFilter,
+  PrismaValidationExceptionFilter,
+} from './common/filters/prisma-exception.filter';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
 import { HashtagsModule } from './hashtags/hashtags.module';
 import { NotificationsModule } from './notifications/notifications.module';
@@ -58,6 +63,18 @@ import { FeedModule } from './feed/feed.module';
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
+    },
+    {
+      provide: APP_FILTER,
+      useClass: HttpExceptionFilter,
+    },
+    {
+      provide: APP_FILTER,
+      useClass: PrismaExceptionFilter,
+    },
+    {
+      provide: APP_FILTER,
+      useClass: PrismaValidationExceptionFilter,
     },
   ],
 })

@@ -1,0 +1,18 @@
+import { Transform } from 'class-transformer';
+import { IsInt, IsOptional, IsString, IsUUID, Max, Min } from 'class-validator';
+
+export class PaginatePostsDto {
+  @IsOptional()
+  @IsString()
+  @IsUUID('7')
+  cursor?: string;
+
+  @IsOptional()
+  @Transform(({ value }) =>
+    value !== undefined && value !== '' ? parseInt(value, 10) : undefined,
+  )
+  @IsInt()
+  @Min(1)
+  @Max(50)
+  limit?: number;
+}
