@@ -11,6 +11,8 @@ import { Server, Socket } from 'socket.io';
 import { JwtPayload } from 'src/auth/strategies/jwt.strategy';
 import { RedisService } from 'src/redis/redis.service';
 import { UsersService } from 'src/users/users.service';
+import { RedisKeys } from 'src/common/utils/redis-keys';
+import { cookieExtractor } from 'src/common/utils/jwt-extractor.util';
 
 @WebSocketGateway({
   namespace: '/notifications',
@@ -48,7 +50,9 @@ export class NotificationsGateway implements OnGatewayConnection {
         secret: this.configService.get<string>('JWT_ACCESS_SECRET'),
       });
 
-      const isBlacklisted = await this.redisService.exists(`bl:${payload.jti}`);
+      const isBlacklisted = await this.redisService.exists(
+        RedisKeys.auth.blacklist(payload.jti),
+      );
       if (isBlacklisted) {
         throw new Error('Token revoked');
       }
@@ -68,6 +72,22 @@ export class NotificationsGateway implements OnGatewayConnection {
 
     const header = socket.handshake.headers.authorization;
     if (header?.startsWith('Bearer ')) return header.slice(7);
+
+    // Fallback to httpOnly cookies (web clients use __Host-access_token)
+    const cookieHeader = socket.handshake.headers.cookie as string | undefined;
+    if (cookieHeader) {
+      const cookies: Record<string, string> = {};
+      for (const part of cookieHeader.split(';')) {
+        const [rawKey, ...rest] = part.trim().split('=');
+        if (!rawKey || rest.length === 0) continue;
+        cookies[rawKey] = decodeURIComponent(rest.join('='));
+      }
+      const mockReq = { cookies } as unknown as Parameters<
+        ReturnType<typeof cookieExtractor>
+      >[0];
+      const fromCookie = cookieExtractor('access_token')(mockReq);
+      if (fromCookie) return fromCookie;
+    }
 
     return undefined;
   }

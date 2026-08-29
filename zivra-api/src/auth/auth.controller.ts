@@ -129,10 +129,11 @@ export class AuthController {
     return this.authService.resetPassword(dto);
   }
 
+  @Public()
+  @Throttle({ auth: { limit: 10, ttl: 60000 } })
   @Post('logout')
   @HttpCode(HttpStatus.OK)
   async logout(
-    @CurrentUser() user: SafeUser,
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ) {
