@@ -34,14 +34,23 @@ async function bootstrap() {
   );
   app.use(hpp({ whitelist: ['q', 'limit', 'cursor'] }));
   app.use(cookieParser());
-  app.enableCors({
-    origin: process.env.CORS_ORIGIN
+  {
+    const corsOrigins = process.env.CORS_ORIGIN
       ? process.env.CORS_ORIGIN.split(',')
           .map((s) => s.trim())
           .filter(Boolean)
-      : [],
-    credentials: true,
-  });
+      : [];
+    app.enableCors({
+      origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+        if (!origin) return callback(null, true);
+        if (corsOrigins.includes(origin) || origin.endsWith('.vercel.app') || origin.startsWith('http://localhost:')) {
+          return callback(null, true);
+        }
+        return callback(null, false);
+      },
+      credentials: true,
+    });
+  }
   app.enableShutdownHooks();
   app.useGlobalPipes(
     new ValidationPipe({

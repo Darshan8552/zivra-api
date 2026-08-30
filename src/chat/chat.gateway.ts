@@ -21,11 +21,18 @@ import { PrismaService } from 'src/prisma/prisma.service';
 @WebSocketGateway({
   namespace: '/chat',
   cors: {
-    origin: process.env.CORS_ORIGIN
-      ? process.env.CORS_ORIGIN.split(',')
-          .map((s) => s.trim())
-          .filter(Boolean)
-      : [],
+    origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+      if (!origin) return callback(null, true);
+      const allowed = (process.env.CORS_ORIGIN ?? '')
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean);
+      if (allowed.includes(origin) || origin.endsWith('.vercel.app') || origin.startsWith('http://localhost:')) {
+        return callback(null, true);
+      }
+      // Fallback: allow any vercel preview + localhost for dev
+      return callback(null, false);
+    },
     credentials: true,
   },
 })
