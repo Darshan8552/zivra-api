@@ -10,7 +10,7 @@
     "npm": ">=10"
   },
   "scripts": {
-    "build": "nest build",
+    "build": "npx nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
@@ -45,6 +45,7 @@
     "class-validator": "^0.15.1",
     "cloudinary": "^2.10.0",
     "cookie-parser": "^1.4.7",
+    "dotenv": "^17.4.1",
     "helmet": "^8.3.0",
     "hpp": "^0.2.3",
     "ioredis": "^6.0.0",
