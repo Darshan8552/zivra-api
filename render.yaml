@@ -5,7 +5,7 @@ services:
     plan: free
     branch: main
     buildCommand: npm ci --include=dev && npx prisma generate && npx nest build
-    startCommand: npx prisma migrate deploy && node dist/main
+    startCommand: npx prisma migrate deploy && node dist/src/main
     healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV
