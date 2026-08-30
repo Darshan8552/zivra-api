@@ -57,18 +57,25 @@ $ npm run test:e2e
 $ npm run test:cov
 ```
 
-## Deployment
+## Deployment — Render (Free, no Docker)
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+Live health: `GET /api/health` (VERSION_NEUTRAL, checks DB+Redis via `@nestjs/terminus`)
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+**Render settings (Node native):**
+- Build: `npm ci && npx prisma generate && npm run build`
+- Start: `npx prisma migrate deploy && node dist/main`
+- Health check: `/api/health`
+- Env: `NODE_ENV=production`, `PORT=10000` (Render injects `$PORT`), `CORS_ORIGIN`, `DATABASE_URL` (Neon pooled), `UPSTASH_REDIS_URL`, `JWT_*`, `CLOUDINARY_*`, `BREVO_*`, `API_VERSION=1`
 
+**Local prod smoke:**
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+npm ci && npx prisma generate && npm run build
+PORT=3001 CORS_ORIGIN=http://localhost:3000 DATABASE_URL=... UPSTASH_REDIS_URL=... JWT_ACCESS_SECRET=... \
+  node dist/main
+curl http://localhost:3001/api/health
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+See `render.yaml` Blueprint at repo root. Original Nest deploy docs: https://docs.nestjs.com/deployment
 
 ## Resources
 
