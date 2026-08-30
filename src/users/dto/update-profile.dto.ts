@@ -49,7 +49,7 @@ export class UpdateProfileDto {
   @IsOptional()
   @Transform(
     ({ value, obj, key }: { value: unknown; obj: unknown; key: string }) => {
-      const raw = obj?.[key] ?? value;
+      const raw = (obj as Record<string, unknown>)?.[key] ?? value;
       if (raw === 'true' || raw === true) return true;
       if (raw === 'false' || raw === false) return false;
       if (raw === '') return undefined;
