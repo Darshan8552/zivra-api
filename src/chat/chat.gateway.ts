@@ -93,10 +93,17 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         subClient = new RedisCtor(redisUrl, opts);
       }
 
-      server.adapter(createAdapter(pubClient, subClient) as never);
-      this.logger.log(
-        'Socket.IO Redis adapter initialized for /chat — horizontal scaling enabled',
-      );
+      // Nest gateway `server` is namespaced; adapter lives on underlying engine
+      const maybeAdapter = (server as unknown as { adapter?: unknown }).adapter;
+      if (typeof maybeAdapter === 'function') {
+        (server as unknown as { adapter: (a: unknown) => void }).adapter(createAdapter(pubClient, subClient) as never);
+        this.logger.log(
+          'Socket.IO Redis adapter initialized for /chat — horizontal scaling enabled',
+        );
+      } else {
+        // Single-instance is expected locally; adapter only needed for horizontal scaling on Render
+        this.logger.log('Chat WS running single-instance (no Redis adapter needed)');
+      }
     } catch (err) {
       this.logger.warn(
         `Socket.IO Redis adapter not configured for /chat — single-instance mode. Reason: ${(err as Error).message}`,

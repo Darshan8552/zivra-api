@@ -27,6 +27,7 @@ import { HealthModule } from './health/health.module';
 import { ConversationsModule } from './conversations/conversations.module';
 import { MessagesModule } from './messages/messages.module';
 import { ChatModule } from './chat/chat.module';
+import { StoriesModule } from './stories/stories.module';
 
 @Module({
   imports: [
@@ -62,6 +63,7 @@ import { ChatModule } from './chat/chat.module';
     ConversationsModule,
     MessagesModule,
     ChatModule,
+    StoriesModule,
   ],
   providers: [
     {

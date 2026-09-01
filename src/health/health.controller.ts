@@ -24,7 +24,8 @@ export class HealthController {
   @HealthCheck()
   check() {
     return this.health.check([
-      () => this.db.pingCheck('database', this.prisma as unknown as never),
+      // Neon pooler cold start can exceed 1s (default terminus timeout); use 5s
+      () => this.db.pingCheck('database', this.prisma as unknown as never, { timeout: 5000 } as unknown as never),
       () => this.redisIndicator.isHealthy('redis'),
     ]);
   }

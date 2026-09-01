@@ -80,10 +80,15 @@ export class NotificationsGateway implements OnGatewayConnection {
         subClient = new RedisCtor(redisUrl, opts);
       }
 
-      server.adapter(createAdapter(pubClient, subClient) as never);
-      this.logger.log(
-        'Socket.IO Redis adapter initialized — horizontal scaling enabled',
-      );
+      const maybeAdapter = (server as unknown as { adapter?: unknown }).adapter;
+      if (typeof maybeAdapter === 'function') {
+        (server as unknown as { adapter: (a: unknown) => void }).adapter(createAdapter(pubClient, subClient) as never);
+        this.logger.log(
+          'Socket.IO Redis adapter initialized — horizontal scaling enabled',
+        );
+      } else {
+        this.logger.log('Notifications WS running single-instance (no Redis adapter needed)');
+      }
     } catch (err) {
       this.logger.warn(
         `Socket.IO Redis adapter not configured — running in single-instance mode. ` +

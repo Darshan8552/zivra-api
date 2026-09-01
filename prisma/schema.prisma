@@ -104,6 +104,11 @@ enum ReportStatus {
   DISMISSED
 }
 
+enum StoryVisibility {
+  PUBLIC
+  CLOSE_FRIENDS
+}
+
 model User {
   id              String     @id @default(uuid(7))
   email           String     @unique
@@ -148,6 +153,8 @@ model User {
   reportsMade             Report[]                  @relation("Reporter")
   reportsReceived         Report[]                  @relation("ReportedUser")
   postUserTags            PostUserTag[]
+  closeFriendsOwned       CloseFriend[] @relation("CloseFriendsOwner")
+  closeFriendsAsFriend    CloseFriend[] @relation("CloseFriendsFriend")
 
   @@index([status])
   @@index([deletedAt])
@@ -386,6 +393,8 @@ model Story {
   publicId String    @map("public_id")
   type     MediaType
 
+  visibility StoryVisibility @default(PUBLIC) @map("visibility")
+
   expiresAt DateTime @map("expires_at")
   createdAt DateTime @default(now()) @map("created_at")
 
@@ -393,6 +402,7 @@ model Story {
 
   @@index([userId, createdAt])
   @@index([expiresAt])
+  @@index([userId, visibility, expiresAt])
   @@map("stories")
 }
 
@@ -408,6 +418,20 @@ model StoryView {
   @@unique([storyId, userId])
   @@index([userId])
   @@map("story_views")
+}
+
+model CloseFriend {
+  id        String   @id @default(uuid(7))
+  userId    String   @map("user_id")
+  friendId  String   @map("friend_id")
+  user      User     @relation("CloseFriendsOwner", fields: [userId], references: [id], onDelete: Cascade)
+  friend    User     @relation("CloseFriendsFriend", fields: [friendId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([userId, friendId])
+  @@index([friendId])
+  @@index([userId])
+  @@map("close_friends")
 }
 
 model Conversation {
