@@ -49,6 +49,7 @@ async function bootstrap() {
         return callback(null, false);
       },
       credentials: true,
+      allowedHeaders: 'Content-Type, Authorization, x-device-type, x-device-id, x-device-name',
     });
   }
   app.enableShutdownHooks();

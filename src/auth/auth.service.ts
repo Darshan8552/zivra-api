@@ -406,4 +406,28 @@ export class AuthService {
     clearAuthCookies(res);
     return { message: 'Logged out successfully' };
   }
+
+  async logoutFromAllDevices(
+    req: Request,
+    res: Response,
+    userId: string,
+  ): Promise<{ message: string }> {
+    const accessToken =
+      ExtractJwt.fromAuthHeaderAsBearerToken()(req) ??
+      cookieExtractor('access_token')(req);
+
+    if (accessToken) {
+      try {
+        await this.tokensService.blacklistToken(accessToken);
+      } catch {}
+    }
+
+    await this.prisma.session.updateMany({
+      where: { userId, revokedAt: null },
+      data: { revokedAt: new Date() },
+    });
+
+    clearAuthCookies(res);
+    return { message: 'Logged out from all devices' };
+  }
 }

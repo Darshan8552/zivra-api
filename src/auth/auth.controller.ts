@@ -137,6 +137,16 @@ export class AuthController {
     return await this.authService.logout(req, res);
   }
 
+  @Post('logout-all')
+  @HttpCode(HttpStatus.OK)
+  async logoutAll(
+    @CurrentUser() user: SafeUser,
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    return this.authService.logoutFromAllDevices(req, res, user.id);
+  }
+
   @Get('me')
   @HttpCode(HttpStatus.OK)
   async me(@CurrentUser() user: SafeUser) {

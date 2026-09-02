@@ -7,6 +7,10 @@ export class GlobalLoggerMiddleware implements NestMiddleware {
 
   use(req: Request, res: Response, next: NextFunction) {
     const { method, originalUrl } = req;
+    // mute health probes (Render hits /api/health often) to keep logs readable
+    if (originalUrl.includes('/health')) {
+      return next();
+    }
     const startTime = Date.now();
 
     res.on('finish', () => {
